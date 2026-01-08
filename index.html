@@ -86,7 +86,17 @@
 
                 <!-- News Économie -->
                 <div class="card news-card full-width">
-                    <h3 class="card-title">Actualités Économiques</h3>
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title" style="margin-bottom: 0;">Actualités Économiques</h3>
+                            <span id="economy-timestamp" class="section-timestamp"></span>
+                        </div>
+                        <button class="section-refresh-btn" onclick="refreshSection('economy')" title="Actualiser">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                            </svg>
+                        </button>
+                    </div>
                     <div id="economyNewsContainer" class="loading">
                         <div class="spinner"></div>
                     </div>
@@ -105,7 +115,17 @@
             
             <div class="cards-grid">
                 <div class="card news-card full-width">
-                    <h3 class="card-title">Tendances IA</h3>
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title" style="margin-bottom: 0;">Tendances IA</h3>
+                            <span id="ai-timestamp" class="section-timestamp"></span>
+                        </div>
+                        <button class="section-refresh-btn" onclick="refreshSection('ai')" title="Actualiser">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                            </svg>
+                        </button>
+                    </div>
                     <div id="aiNewsContainer" class="loading">
                         <div class="spinner"></div>
                     </div>
@@ -161,7 +181,17 @@
             
             <div class="cards-grid">
                 <div class="card news-card full-width">
-                    <h3 class="card-title">Actualités Internationales</h3>
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title" style="margin-bottom: 0;">Actualités Internationales</h3>
+                            <span id="geopolitics-timestamp" class="section-timestamp"></span>
+                        </div>
+                        <button class="section-refresh-btn" onclick="refreshSection('geopolitics')" title="Actualiser">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                            </svg>
+                        </button>
+                    </div>
                     <div id="geopoliticsContainer" class="loading">
                         <div class="spinner"></div>
                     </div>

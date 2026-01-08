@@ -304,10 +304,55 @@ function updateDateTime() {
         now.toLocaleTimeString('fr-FR', timeOptions);
 }
 
+// Timestamps pour chaque section
+const timestamps = {};
+
+// Helper function to get skeleton loader HTML
+function getSkeletonLoader(count = 3) {
+    return Array(count).fill(0).map(() => `
+        <div class="skeleton-item">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+        </div>
+    `).join('');
+}
+
+// Helper function to format timestamp
+function formatTimestamp(date) {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+
+    if (minutes < 1) return 'À l\'instant';
+    if (minutes === 1) return 'Il y a 1 minute';
+    if (minutes < 60) return `Il y a ${minutes} minutes`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours === 1) return 'Il y a 1 heure';
+    if (hours < 24) return `Il y a ${hours} heures`;
+
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Update timestamps display
+function updateTimestamps() {
+    Object.keys(timestamps).forEach(key => {
+        const element = document.getElementById(`${key}-timestamp`);
+        if (element && timestamps[key]) {
+            element.textContent = formatTimestamp(timestamps[key]);
+        }
+    });
+}
+
+// Update timestamps every minute
+setInterval(updateTimestamps, 60000);
+
 // Chargement de toutes les données
 async function loadAllData() {
     updateDateTime();
-    
+
     // Lancer toutes les requêtes en parallèle
     Promise.all([
         loadIndices(),
@@ -321,6 +366,39 @@ async function loadAllData() {
     ]).catch(error => {
         console.error('Erreur lors du chargement des données:', error);
     });
+}
+
+// Rafraîchir une section spécifique
+async function refreshSection(section) {
+    const button = event?.target?.closest('.section-refresh-btn');
+    if (button) {
+        button.classList.add('refreshing');
+    }
+
+    try {
+        switch(section) {
+            case 'economy':
+                await loadEconomyNews();
+                break;
+            case 'ai':
+                await loadAINews();
+                break;
+            case 'geopolitics':
+                await loadGeopoliticsNews();
+                break;
+            default:
+                console.warn('Section inconnue:', section);
+        }
+
+        showNotification('success', 'Actualisé', `Section ${section} mise à jour avec succès`);
+    } catch (error) {
+        console.error(`Erreur lors du rafraîchissement de ${section}:`, error);
+        showNotification('error', 'Erreur', `Impossible de rafraîchir la section ${section}`);
+    } finally {
+        if (button) {
+            setTimeout(() => button.classList.remove('refreshing'), 500);
+        }
+    }
 }
 
 // ========== FINANCE ==========
@@ -483,6 +561,10 @@ async function loadEconomyNews() {
                 </div>
             </div>
         `}).join('');
+
+        // Update timestamp
+        timestamps.economy = new Date();
+        updateTimestamps();
     } catch (error) {
         console.error('Erreur news économie:', error);
         container.classList.remove('loading');
@@ -527,6 +609,10 @@ async function loadAINews() {
                 </div>
             </div>
         `}).join('');
+
+        // Update timestamp
+        timestamps.ai = new Date();
+        updateTimestamps();
     } catch (error) {
         console.error('Erreur news IA:', error);
         container.classList.remove('loading');
@@ -800,6 +886,10 @@ async function loadGeopoliticsNews() {
                 </div>
             </div>
         `}).join('');
+
+        // Update timestamp
+        timestamps.geopolitics = new Date();
+        updateTimestamps();
     } catch (error) {
         console.error('Erreur news géopolitique:', error);
         container.classList.remove('loading');
