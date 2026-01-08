@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Simple des Liens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-link {
+            color: #00d4ff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 4px;
+            display: inline-block;
+            margin: 1rem 0;
+        }
+        .test-link:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>Test des Liens</h1>
+
+    <h2>Test 1: Lien HTML basique</h2>
+    <a href="https://www.google.com" target="_blank" class="test-link">Cliquez ici pour Google</a>
+
+    <h2>Test 2: Lien vers Les Échos (comme dans le dashboard)</h2>
+    <a href="https://www.lesechos.fr/finance-marches" target="_blank" rel="noopener noreferrer" class="test-link">Lire sur Les Échos →</a>
+
+    <h2>Test 3: Est-ce que ce lien fonctionne quand vous cliquez dessus?</h2>
+    <p>Si ces liens fonctionnent mais pas ceux du dashboard, le problème est dans le CSS du dashboard.</p>
+
+    <script>
+        // Log tous les clics
+        document.addEventListener('click', (e) => {
+            console.log('Click detected on:', e.target);
+            if (e.target.tagName === 'A') {
+                console.log('Link href:', e.target.href);
+                console.log('Link text:', e.target.textContent);
+            }
+        });
+    </script>
+</body>
+</html>
