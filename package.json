@@ -1,0 +1,30 @@
+{
+  "name": "dashboard-backend",
+  "version": "1.0.0",
+  "description": "Backend optionnel pour le dashboard quotidien - Scraping Leboncoin",
+  "main": "leboncoin-scraper.js",
+  "scripts": {
+    "start": "node leboncoin-scraper.js",
+    "dev": "nodemon leboncoin-scraper.js",
+    "test": "node test-scraper.js"
+  },
+  "keywords": [
+    "dashboard",
+    "scraper",
+    "leboncoin",
+    "real-estate"
+  ],
+  "author": "Votre Nom",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "puppeteer": "^21.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
