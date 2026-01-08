@@ -463,13 +463,14 @@ async function loadEconomyNews() {
         ]);
 
         container.classList.remove('loading');
+        console.log('Economy news loaded:', data.length, 'items');
         container.innerHTML = data.slice(0, 5).map(news => `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${news.url}" target="_blank" class="news-link">Lire →</a>
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
                 </div>
             </div>
         `).join('');
@@ -498,13 +499,14 @@ async function loadAINews() {
         ]);
 
         container.classList.remove('loading');
+        console.log('AI news loaded:', data.length, 'items');
         container.innerHTML = data.slice(0, 5).map(news => `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${news.url}" target="_blank" class="news-link">Lire →</a>
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
                 </div>
             </div>
         `).join('');
@@ -760,13 +762,14 @@ async function loadGeopoliticsNews() {
         ]);
 
         container.classList.remove('loading');
+        console.log('Geopolitics news loaded:', data.length, 'items');
         container.innerHTML = data.slice(0, 5).map(news => `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${news.url}" target="_blank" class="news-link">Lire →</a>
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
                 </div>
             </div>
         `).join('');
@@ -804,14 +807,26 @@ async function fetchRSSNews(topic) {
 
     const data = await response.json();
 
-    if (data.status !== 'ok') throw new Error('RSS parsing error');
+    if (data.status !== 'ok') {
+        console.error('RSS parsing error:', data);
+        throw new Error('RSS parsing error');
+    }
+
+    console.log(`RSS data for ${topic}:`, data.items.slice(0, 2)); // Debug log
 
     return data.items.map(item => ({
-        title: item.title,
-        description: item.description ? item.description.replace(/<[^>]*>/g, '').substring(0, 150) + '...' : '',
-        source: data.feed.title,
-        url: item.link
+        title: escapeHtml(item.title),
+        description: item.description ? escapeHtml(item.description.replace(/<[^>]*>/g, '')).substring(0, 150) + '...' : '',
+        source: escapeHtml(data.feed.title),
+        url: item.link || item.url || '#'
     }));
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 async function fetchNewsAPI(query, category) {
@@ -883,13 +898,25 @@ function fetchMockEconomyNews() {
             title: "La BCE maintient ses taux d'intérêt",
             description: "La Banque Centrale Européenne a décidé de maintenir ses taux directeurs inchangés.",
             source: "Les Échos",
-            url: "#"
+            url: "https://www.lesechos.fr/finance-marches"
         },
         {
             title: "Wall Street termine en hausse",
             description: "Les indices américains clôturent dans le vert portés par le secteur technologique.",
             source: "Bloomberg",
-            url: "#"
+            url: "https://www.bloomberg.com/markets"
+        },
+        {
+            title: "Le CAC 40 en forte progression",
+            description: "La bourse de Paris affiche une belle performance ce trimestre.",
+            source: "Les Échos",
+            url: "https://www.lesechos.fr/finance-marches"
+        },
+        {
+            title: "Inflation en baisse en zone euro",
+            description: "Les derniers chiffres montrent un ralentissement de l'inflation.",
+            source: "Reuters",
+            url: "https://www.reuters.com/markets"
         }
     ];
 }
@@ -900,13 +927,25 @@ function fetchMockAINews() {
             title: "OpenAI lance GPT-5",
             description: "Le nouveau modèle de langage promet des capacités de raisonnement améliorées.",
             source: "TechCrunch",
-            url: "#"
+            url: "https://techcrunch.com/tag/artificial-intelligence/"
         },
         {
             title: "L'IA générative transforme l'industrie",
             description: "Les entreprises adoptent massivement les outils d'intelligence artificielle.",
             source: "MIT Technology Review",
-            url: "#"
+            url: "https://www.technologyreview.com/topic/artificial-intelligence/"
+        },
+        {
+            title: "Les agents IA autonomes arrivent",
+            description: "Une nouvelle génération d'assistants IA peut accomplir des tâches complexes de manière autonome.",
+            source: "Wired",
+            url: "https://www.wired.com/tag/artificial-intelligence/"
+        },
+        {
+            title: "IA et éthique : le débat continue",
+            description: "Les régulateurs du monde entier travaillent sur des cadres pour l'IA responsable.",
+            source: "The Verge",
+            url: "https://www.theverge.com/ai-artificial-intelligence"
         }
     ];
 }
@@ -917,13 +956,25 @@ function fetchMockGeopoliticsNews() {
             title: "Sommet du G7 à venir",
             description: "Les dirigeants mondiaux se réuniront pour discuter des enjeux économiques et climatiques.",
             source: "Le Monde",
-            url: "#"
+            url: "https://www.lemonde.fr/international/"
         },
         {
             title: "Tensions au Moyen-Orient",
             description: "La situation reste tendue dans la région avec de nouvelles négociations en cours.",
             source: "France 24",
-            url: "#"
+            url: "https://www.france24.com/fr/moyen-orient/"
+        },
+        {
+            title: "Climat : accord historique à la COP",
+            description: "Les pays participants ont signé un accord ambitieux pour réduire les émissions de CO2.",
+            source: "Le Monde",
+            url: "https://www.lemonde.fr/international/"
+        },
+        {
+            title: "Relations sino-américaines en évolution",
+            description: "Les deux superpuissances cherchent à stabiliser leurs relations commerciales.",
+            source: "Reuters",
+            url: "https://www.reuters.com/world/"
         }
     ];
 }
