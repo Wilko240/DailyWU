@@ -457,10 +457,8 @@ async function loadEconomyNews() {
     container.classList.add('loading');
 
     try {
-        const data = await fetchWithFallback([
-            () => fetchRSSNews('economy'),
-            () => fetchMockEconomyNews()
-        ]);
+        // Use mock data directly (RSS feeds have CORS/API limitations)
+        const data = fetchMockEconomyNews();
 
         container.classList.remove('loading');
         console.log('Economy news loaded:', data.length, 'items');
@@ -475,17 +473,13 @@ async function loadEconomyNews() {
         }
 
         container.innerHTML = data.slice(0, 5).map(news => {
-            // Ensure URL is valid
-            const url = news.url && news.url !== '#' ? news.url : 'https://www.lesechos.fr/finance-marches';
-            console.log('Creating link with URL:', url);
-
             return `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="news-link" onclick="console.log('Link clicked:', '${url}')">Lire →</a>
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
                 </div>
             </div>
         `}).join('');
@@ -508,10 +502,8 @@ async function loadAINews() {
     container.classList.add('loading');
 
     try {
-        const data = await fetchWithFallback([
-            () => fetchRSSNews('ai'),
-            () => fetchMockAINews()
-        ]);
+        // Use mock data directly (RSS feeds have CORS/API limitations)
+        const data = fetchMockAINews();
 
         container.classList.remove('loading');
         console.log('AI news loaded:', data.length, 'items');
@@ -525,16 +517,13 @@ async function loadAINews() {
         }
 
         container.innerHTML = data.slice(0, 5).map(news => {
-            // Ensure URL is valid
-            const url = news.url && news.url !== '#' ? news.url : 'https://www.artificialintelligence-news.com/';
-
             return `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="news-link" onclick="console.log('AI link clicked:', '${url}')">Lire →</a>
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
                 </div>
             </div>
         `}).join('');
@@ -784,10 +773,8 @@ async function loadGeopoliticsNews() {
     container.classList.add('loading');
 
     try {
-        const data = await fetchWithFallback([
-            () => fetchRSSNews('geopolitics'),
-            () => fetchMockGeopoliticsNews()
-        ]);
+        // Use mock data directly (RSS feeds have CORS/API limitations)
+        const data = fetchMockGeopoliticsNews();
 
         container.classList.remove('loading');
         console.log('Geopolitics news loaded:', data.length, 'items');
@@ -801,16 +788,13 @@ async function loadGeopoliticsNews() {
         }
 
         container.innerHTML = data.slice(0, 5).map(news => {
-            // Ensure URL is valid
-            const url = news.url && news.url !== '#' ? news.url : 'https://www.lemonde.fr/international/';
-
             return `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="news-link" onclick="console.log('Geo link clicked:', '${url}')">Lire →</a>
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
                 </div>
             </div>
         `}).join('');
