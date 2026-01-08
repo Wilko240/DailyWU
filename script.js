@@ -570,16 +570,18 @@ async function loadWeather() {
             'Fog': '🌫️'
         };
 
-        // Extraire prévisions pour les 4 prochains jours (midi)
+        // Extraire prévisions pour les 4 prochains jours
         const dailyForecasts = [];
         const seenDays = new Set();
+        const today = new Date().toDateString();
 
         for (const item of forecastData.list) {
             const date = new Date(item.dt * 1000);
             const dayKey = date.toDateString();
+            const hour = date.getHours();
 
-            // Prendre la prévision de midi (12h) pour chaque jour
-            if (!seenDays.has(dayKey) && date.getHours() === 12) {
+            // Sauter le jour actuel et prendre une seule prévision par jour (autour de midi: 11h-14h)
+            if (dayKey !== today && !seenDays.has(dayKey) && hour >= 11 && hour <= 14) {
                 seenDays.add(dayKey);
                 dailyForecasts.push({
                     date: date,
