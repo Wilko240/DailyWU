@@ -20,16 +20,269 @@ const CRYPTOS = ['bitcoin', 'ethereum', 'binancecoin', 'cardano', 'solana'];
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     updateDateTime();
     loadAllData();
-    
+    initChartModal();
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('refreshBtn').addEventListener('click', () => {
         loadAllData();
     });
-    
+
     // Actualisation automatique toutes les heures
     setInterval(loadAllData, 3600000);
 });
+
+// ========== THEME MANAGEMENT ==========
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+// ========== NOTIFICATION SYSTEM ==========
+
+function showNotification(type, title, message, duration = 5000) {
+    const container = document.getElementById('notificationContainer');
+
+    const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-icon">${icons[type]}</div>
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+    `;
+
+    container.appendChild(notification);
+
+    if (duration > 0) {
+        setTimeout(() => {
+            notification.classList.add('hiding');
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
+}
+
+// Error handling helpers
+function getErrorMessage(error, context) {
+    const messages = {
+        'Failed to fetch': 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.',
+        'NetworkError': 'Erreur réseau. Vérifiez votre connexion.',
+        'API News error': 'Service d\'actualités temporairement indisponible.',
+        'API météo non disponible': 'Service météo temporairement indisponible.',
+        'Clé API requise': 'Configuration API requise. Utilisation des données de démonstration.'
+    };
+
+    const errorMsg = error.message || error.toString();
+    return messages[errorMsg] || `Erreur lors du chargement de ${context}.`;
+}
+
+async function fetchWithRetry(fetchFn, retries = 3, delay = 1000, context = 'données') {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fetchFn();
+        } catch (error) {
+            if (i === retries - 1) {
+                console.error(`Échec final pour ${context}:`, error);
+                showNotification('error', 'Erreur de chargement', getErrorMessage(error, context));
+                throw error;
+            }
+            console.log(`Tentative ${i + 1}/${retries} échouée pour ${context}, nouvelle tentative...`);
+            await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        }
+    }
+}
+
+// ========== CHART MODAL MANAGEMENT ==========
+
+let currentChart = null;
+let currentSymbol = null;
+let currentType = null;
+
+function initChartModal() {
+    const modal = document.getElementById('chartModal');
+    const closeBtn = document.getElementById('closeModal');
+
+    // Close modal
+    closeBtn.addEventListener('click', closeChartModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeChartModal();
+    });
+
+    // Period buttons
+    document.querySelectorAll('.chart-period-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.chart-period-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const period = parseInt(e.target.dataset.period);
+            if (currentSymbol && currentType) {
+                loadChartData(currentSymbol, currentType, period);
+            }
+        });
+    });
+}
+
+function openChartModal(symbol, name, type) {
+    currentSymbol = symbol;
+    currentType = type;
+
+    const modal = document.getElementById('chartModal');
+    const title = document.getElementById('chartTitle');
+
+    title.textContent = `${name} - Historique des prix`;
+    modal.classList.add('active');
+
+    // Load default period (7 days)
+    loadChartData(symbol, type, 7);
+}
+
+function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+    modal.classList.remove('active');
+
+    if (currentChart) {
+        currentChart.destroy();
+        currentChart = null;
+    }
+}
+
+async function loadChartData(symbol, type, days = 7) {
+    const canvas = document.getElementById('priceChart');
+    const ctx = canvas.getContext('2d');
+
+    // Generate mock data (in production, fetch from real API)
+    const data = generateMockChartData(days);
+
+    // Destroy previous chart
+    if (currentChart) {
+        currentChart.destroy();
+    }
+
+    // Get theme colors
+    const theme = document.documentElement.getAttribute('data-theme');
+    const isDark = theme === 'dark';
+
+    // Create new chart
+    currentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Prix',
+                data: data.values,
+                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'),
+                backgroundColor: isDark
+                    ? 'rgba(0, 212, 255, 0.1)'
+                    : 'rgba(0, 153, 204, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'),
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                    titleColor: isDark ? '#ffffff' : '#1a1a1a',
+                    bodyColor: isDark ? '#a0a0a0' : '#666666',
+                    borderColor: isDark ? '#2a2a2a' : '#e0e0e0',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Prix: $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: isDark ? '#2a2a2a' : '#e0e0e0',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: isDark ? '#666666' : '#999999'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: isDark ? '#2a2a2a' : '#e0e0e0',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: isDark ? '#666666' : '#999999',
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+}
+
+function generateMockChartData(days) {
+    const labels = [];
+    const values = [];
+    const now = new Date();
+    let basePrice = 100 + Math.random() * 400;
+
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+
+        if (days <= 7) {
+            labels.push(date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }));
+        } else if (days <= 30) {
+            labels.push(date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+        } else {
+            labels.push(date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }));
+        }
+
+        // Generate random walk
+        const change = (Math.random() - 0.5) * basePrice * 0.05;
+        basePrice += change;
+        values.push(basePrice);
+    }
+
+    return { labels, values };
+}
 
 // Mise à jour de la date et heure
 function updateDateTime() {
@@ -75,16 +328,18 @@ async function loadAllData() {
 // Charger les indices
 async function loadIndices() {
     const container = document.getElementById('indicesContainer');
-    
+    container.classList.add('loading');
+
     try {
         // Utilisation de l'API gratuite Yahoo Finance via API alternative
         const data = await fetchWithFallback([
             () => fetchYahooFinance(INDICES.map(i => i.symbol)),
             () => fetchMockIndices() // Fallback avec données de démo
         ]);
-        
+
+        container.classList.remove('loading');
         container.innerHTML = data.map(index => `
-            <div class="index-item">
+            <div class="index-item" onclick="openChartModal('${index.symbol}', '${index.name}', 'index')">
                 <div class="index-info">
                     <div class="index-name">${index.name}</div>
                     <div class="index-symbol">${index.symbol}</div>
@@ -99,22 +354,30 @@ async function loadIndices() {
         `).join('');
     } catch (error) {
         console.error('Erreur indices:', error);
-        container.innerHTML = getEmptyState('📊', 'Impossible de charger les indices');
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '📊',
+            'Erreur de chargement',
+            getErrorMessage(error, 'indices'),
+            loadIndices
+        );
     }
 }
 
 // Charger les actions
 async function loadStocks() {
     const container = document.getElementById('stocksContainer');
-    
+    container.classList.add('loading');
+
     try {
         const data = await fetchWithFallback([
             () => fetchAlphaVantageStocks(STOCKS),
             () => fetchMockStocks()
         ]);
-        
+
+        container.classList.remove('loading');
         container.innerHTML = data.map(stock => `
-            <div class="stock-item">
+            <div class="stock-item" onclick="openChartModal('${stock.symbol}', '${stock.name}', 'stock')">
                 <div class="stock-info">
                     <div class="stock-symbol">${stock.symbol}</div>
                     <div class="stock-name">${stock.name}</div>
@@ -129,30 +392,41 @@ async function loadStocks() {
         `).join('');
     } catch (error) {
         console.error('Erreur actions:', error);
-        container.innerHTML = getEmptyState('📈', 'Impossible de charger les actions');
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '📈',
+            'Erreur de chargement',
+            getErrorMessage(error, 'actions'),
+            loadStocks
+        );
     }
 }
 
 // Charger les cryptomonnaies
 async function loadCrypto() {
     const container = document.getElementById('cryptoContainer');
-    
+    container.classList.add('loading');
+
     try {
         // CoinGecko API - Gratuit et sans clé requise
         const response = await fetch(
             `https://api.coingecko.com/api/v3/simple/price?ids=${CRYPTOS.join(',')}&vs_currencies=usd&include_24hr_change=true`
         );
+
+        if (!response.ok) throw new Error('API Crypto error');
+
         const data = await response.json();
-        
+
         const cryptoData = CRYPTOS.map(id => ({
             name: id.charAt(0).toUpperCase() + id.slice(1),
             symbol: id.toUpperCase().substring(0, 3),
             price: data[id]?.usd || 0,
             change: data[id]?.usd_24h_change || 0
         }));
-        
+
+        container.classList.remove('loading');
         container.innerHTML = cryptoData.map(crypto => `
-            <div class="crypto-item">
+            <div class="crypto-item" onclick="openChartModal('${crypto.symbol}', '${crypto.name}', 'crypto')">
                 <div class="crypto-info">
                     <div class="crypto-name">${crypto.name}</div>
                     <div class="crypto-symbol">${crypto.symbol}</div>
@@ -167,7 +441,13 @@ async function loadCrypto() {
         `).join('');
     } catch (error) {
         console.error('Erreur crypto:', error);
-        container.innerHTML = getEmptyState('💎', 'Impossible de charger les cryptos');
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '💎',
+            'Erreur de chargement',
+            getErrorMessage(error, 'cryptomonnaies'),
+            loadCrypto
+        );
     }
 }
 
@@ -513,6 +793,26 @@ function getEmptyState(icon, message) {
         <div class="empty-state">
             <div class="empty-state-icon">${icon}</div>
             <div class="empty-state-text">${message}</div>
+        </div>
+    `;
+}
+
+function getErrorState(icon, title, message, retryFn) {
+    const retryId = `retry-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Store retry function globally
+    window[retryId] = retryFn;
+
+    return `
+        <div class="error-state">
+            <div class="error-state-icon">${icon}</div>
+            <div class="error-state-title">${title}</div>
+            <div class="error-state-message">${message}</div>
+            <div class="error-state-actions">
+                <button class="retry-btn" onclick="${retryId}()">
+                    Réessayer
+                </button>
+            </div>
         </div>
     `;
 }
