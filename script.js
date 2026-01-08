@@ -570,7 +570,7 @@ async function loadWeather() {
             'Fog': '🌫️'
         };
 
-        // Extraire prévisions pour les 5 prochains jours (midi)
+        // Extraire prévisions pour les 4 prochains jours (midi)
         const dailyForecasts = [];
         const seenDays = new Set();
 
@@ -588,7 +588,7 @@ async function loadWeather() {
                     description: item.weather[0].description
                 });
 
-                if (dailyForecasts.length === 5) break;
+                if (dailyForecasts.length === 4) break;
             }
         }
 
@@ -621,7 +621,7 @@ async function loadWeather() {
             </div>
             ${dailyForecasts.length > 0 ? `
             <div class="weather-forecast">
-                <h4 style="margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Prévisions 5 jours</h4>
+                <h4 style="margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Prévisions 4 jours</h4>
                 <div class="forecast-grid">
                     ${dailyForecasts.map(day => `
                         <div class="forecast-day">
