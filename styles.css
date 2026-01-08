@@ -389,11 +389,20 @@ body::before {
     margin-bottom: var(--spacing-sm);
     border-left: 3px solid var(--accent-primary);
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .news-item:hover {
     background: var(--bg-card-hover);
     transform: translateX(4px);
+}
+
+.news-item * {
+    pointer-events: none;
+}
+
+.news-item a {
+    pointer-events: auto;
 }
 
 .news-title {
