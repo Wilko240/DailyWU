@@ -1134,3 +1134,22 @@ body::before {
 .index-item:hover::after {
     opacity: 0.5;
 }
+
+/* Stocks Grid Layout - Two groups of 4 */
+.stocks-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.stocks-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (max-width: 768px) {
+    .stocks-grid {
+        grid-template-columns: 1fr;
+    }
+}
