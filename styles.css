@@ -679,13 +679,26 @@ body::before {
     gap: var(--spacing-sm);
 }
 
+/* Fix pointer-events for windguru title children */
+.windguru-title * {
+    pointer-events: none;
+}
+
+.windguru-title a {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+}
+
 .windguru-link {
     color: var(--accent-primary);
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 500;
     transition: color 0.2s ease;
-    pointer-events: auto;
+    pointer-events: auto !important;
+    cursor: pointer !important;
 }
 
 .windguru-link:hover {
@@ -784,11 +797,19 @@ body::before {
     text-align: center;
 }
 
+/* Fix pointer-events for windguru note children */
+.windguru-note * {
+    pointer-events: none;
+}
+
 .windguru-note a {
     color: var(--accent-primary);
     text-decoration: none;
     font-weight: 600;
-    pointer-events: auto;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
 }
 
 .windguru-note a:hover {
