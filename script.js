@@ -757,6 +757,9 @@ async function loadWeather() {
             }
         }
 
+        // Générer données Windguru pour les 2 prochains jours
+        const windguruData = generateWindguruForecast();
+
         container.classList.remove('loading');
         container.innerHTML = `
             <div class="weather-main">
@@ -798,12 +801,147 @@ async function loadWeather() {
                 </div>
             </div>
             ` : ''}
+
+            <!-- Prévisions Windguru détaillées -->
+            <div class="windguru-section">
+                <h4 class="windguru-title">
+                    <span>🌊 Prévisions Sports Nautiques - Dubai (2 jours)</span>
+                    <a href="https://www.windguru.cz/5692" target="_blank" rel="noopener noreferrer" class="windguru-link">
+                        Voir Windguru complet →
+                    </a>
+                </h4>
+                <div class="windguru-table-wrapper">
+                    <table class="windguru-table">
+                        <thead>
+                            <tr>
+                                <th>Heure</th>
+                                ${windguruData.map(d => `<th>${d.time}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="label">Vent (kts)</td>
+                                ${windguruData.map(d => `<td class="wind-speed">${d.windSpeed}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Rafales (kts)</td>
+                                ${windguruData.map(d => `<td class="wind-gust">${d.windGust}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Direction vent</td>
+                                ${windguruData.map(d => `<td>${d.windDir}</td>`).join('')}
+                            </tr>
+                            <tr class="highlight">
+                                <td class="label">Vagues (m)</td>
+                                ${windguruData.map(d => `<td class="wave-height">${d.waveHeight}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Période vagues (s)</td>
+                                ${windguruData.map(d => `<td>${d.wavePeriod}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Direction vagues</td>
+                                ${windguruData.map(d => `<td>${d.waveDir}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Température (°C)</td>
+                                ${windguruData.map(d => `<td>${d.temp}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Couverture nuageuse</td>
+                                ${windguruData.map(d => `<td class="clouds">${d.clouds}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Précip. (mm/h)</td>
+                                ${windguruData.map(d => `<td>${d.precip}</td>`).join('')}
+                            </tr>
+                            <tr class="highlight">
+                                <td class="label">Rating ⭐</td>
+                                ${windguruData.map(d => `<td class="rating">${d.rating}</td>`).join('')}
+                            </tr>
+                            <tr>
+                                <td class="label">Marée</td>
+                                ${windguruData.map(d => `<td>${d.tide}</td>`).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="windguru-note">
+                    💡 Prévisions simulées pour démo. Pour données temps réel, consultez directement
+                    <a href="https://www.windguru.cz/5692" target="_blank" rel="noopener noreferrer">Windguru Dubai</a>
+                </div>
+            </div>
         `;
     } catch (error) {
         console.error('Erreur météo:', error);
         container.classList.remove('loading');
         container.innerHTML = getMockWeather();
     }
+}
+
+// Générer des données Windguru réalistes pour Dubai
+function generateWindguruForecast() {
+    const now = new Date();
+    const forecasts = [];
+
+    // Générer prévisions pour les 48 prochaines heures (toutes les 3h = 16 slots)
+    for (let i = 0; i < 16; i++) {
+        const time = new Date(now.getTime() + (i * 3 * 60 * 60 * 1000));
+        const hour = time.getHours();
+        const day = i < 8 ? 'Demain' : 'J+2';
+
+        // Vent plus fort l'après-midi
+        const windBase = hour >= 12 && hour <= 18 ? 15 : 8;
+        const windSpeed = Math.round(windBase + Math.random() * 8);
+        const windGust = Math.round(windSpeed * 1.3);
+
+        // Vagues plus hautes l'après-midi
+        const waveBase = hour >= 12 && hour <= 18 ? 1.2 : 0.7;
+        const waveHeight = (waveBase + Math.random() * 0.5).toFixed(1);
+
+        // Directions variées
+        const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        const windDir = directions[Math.floor(Math.random() * directions.length)];
+        const waveDir = directions[Math.floor(Math.random() * directions.length)];
+
+        // Température selon l'heure
+        const tempBase = hour >= 12 && hour <= 16 ? 30 : 25;
+        const temp = Math.round(tempBase + Math.random() * 3);
+
+        // Nuages
+        const cloudLevels = ['☀️ 0/0/0', '⛅ 20/10/0', '☁️ 50/30/10', '☁️ 80/50/20'];
+        const clouds = cloudLevels[Math.floor(Math.random() * cloudLevels.length)];
+
+        // Précipitations (rare à Dubai)
+        const precip = Math.random() > 0.9 ? (Math.random() * 2).toFixed(1) : '0';
+
+        // Rating basé sur le vent (bon pour kitesurf si 12-25 kts)
+        let rating = '⭐⭐';
+        if (windSpeed >= 12 && windSpeed <= 18) rating = '⭐⭐⭐⭐';
+        else if (windSpeed >= 18 && windSpeed <= 25) rating = '⭐⭐⭐⭐⭐';
+        else if (windSpeed >= 8 && windSpeed < 12) rating = '⭐⭐⭐';
+
+        // Marée (simplifié)
+        const tidePhases = ['Haute', 'Desc.', 'Basse', 'Mont.'];
+        const tide = tidePhases[Math.floor((hour / 6)) % 4];
+
+        forecasts.push({
+            time: `${day} ${hour}h`,
+            windSpeed,
+            windGust,
+            windDir,
+            waveHeight,
+            wavePeriod: Math.round(5 + Math.random() * 3),
+            waveDir,
+            temp,
+            clouds,
+            precip,
+            rating,
+            tide
+        });
+    }
+
+    return forecasts;
 }
 
 // ========== IMMOBILIER ==========
