@@ -464,16 +464,31 @@ async function loadEconomyNews() {
 
         container.classList.remove('loading');
         console.log('Economy news loaded:', data.length, 'items');
-        container.innerHTML = data.slice(0, 5).map(news => `
+
+        // Debug: log first item to check URL
+        if (data.length > 0) {
+            console.log('First economy news item:', {
+                title: data[0].title,
+                url: data[0].url,
+                source: data[0].source
+            });
+        }
+
+        container.innerHTML = data.slice(0, 5).map(news => {
+            // Ensure URL is valid
+            const url = news.url && news.url !== '#' ? news.url : 'https://www.lesechos.fr/finance-marches';
+            console.log('Creating link with URL:', url);
+
+            return `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="news-link" onclick="console.log('Link clicked:', '${url}')">Lire →</a>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     } catch (error) {
         console.error('Erreur news économie:', error);
         container.classList.remove('loading');
@@ -500,16 +515,29 @@ async function loadAINews() {
 
         container.classList.remove('loading');
         console.log('AI news loaded:', data.length, 'items');
-        container.innerHTML = data.slice(0, 5).map(news => `
+
+        // Debug: log first item
+        if (data.length > 0) {
+            console.log('First AI news item:', {
+                title: data[0].title,
+                url: data[0].url
+            });
+        }
+
+        container.innerHTML = data.slice(0, 5).map(news => {
+            // Ensure URL is valid
+            const url = news.url && news.url !== '#' ? news.url : 'https://www.artificialintelligence-news.com/';
+
+            return `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="news-link" onclick="console.log('AI link clicked:', '${url}')">Lire →</a>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     } catch (error) {
         console.error('Erreur news IA:', error);
         container.classList.remove('loading');
@@ -763,16 +791,29 @@ async function loadGeopoliticsNews() {
 
         container.classList.remove('loading');
         console.log('Geopolitics news loaded:', data.length, 'items');
-        container.innerHTML = data.slice(0, 5).map(news => `
+
+        // Debug: log first item
+        if (data.length > 0) {
+            console.log('First geopolitics news item:', {
+                title: data[0].title,
+                url: data[0].url
+            });
+        }
+
+        container.innerHTML = data.slice(0, 5).map(news => {
+            // Ensure URL is valid
+            const url = news.url && news.url !== '#' ? news.url : 'https://www.lemonde.fr/international/';
+
+            return `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
                 <div class="news-description">${news.description}</div>
                 <div class="news-meta">
                     <span class="news-source">${news.source}</span>
-                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="news-link" onclick="console.log('Geo link clicked:', '${url}')">Lire →</a>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     } catch (error) {
         console.error('Erreur news géopolitique:', error);
         container.classList.remove('loading');

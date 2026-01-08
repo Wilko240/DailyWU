@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test des liens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        .news-item {
+            padding: 1rem;
+            background: #333;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        .news-link {
+            color: #00d4ff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: #00d4ff20;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        .news-link:hover {
+            background: #00d4ff40;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test des liens</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Lien HTML simple</h2>
+        <a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="news-link">
+            Cliquez ici pour Google →
+        </a>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Liens générés par JavaScript</h2>
+        <div id="js-links"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Structure identique au dashboard</h2>
+        <div id="dashboard-style"></div>
+    </div>
+
+    <script>
+        // Test 2: Liens JS
+        const testData = [
+            { title: 'Test Google', url: 'https://www.google.com' },
+            { title: 'Test GitHub', url: 'https://www.github.com' },
+            { title: 'Test Les Échos', url: 'https://www.lesechos.fr/finance-marches' }
+        ];
+
+        document.getElementById('js-links').innerHTML = testData.map(item => `
+            <div class="news-item">
+                <div><strong>${item.title}</strong></div>
+                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="news-link">
+                    Ouvrir →
+                </a>
+            </div>
+        `).join('');
+
+        // Test 3: Structure dashboard
+        document.getElementById('dashboard-style').innerHTML = testData.map(item => `
+            <div class="news-item">
+                <div class="news-title">${item.title}</div>
+                <div class="news-meta">
+                    <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="news-link">Lire →</a>
+                </div>
+            </div>
+        `).join('');
+
+        // Log pour vérifier
+        console.log('Test data:', testData);
+
+        // Test de clic
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') {
+                console.log('Link clicked:', e.target.href);
+            }
+        });
+    </script>
+</body>
+</html>
