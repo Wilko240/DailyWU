@@ -454,13 +454,15 @@ async function loadCrypto() {
 // Charger les actualités économiques
 async function loadEconomyNews() {
     const container = document.getElementById('economyNewsContainer');
-    
+    container.classList.add('loading');
+
     try {
         const data = await fetchWithFallback([
-            () => fetchNewsAPI('economy OR finance OR "stock market"', 'business'),
+            () => fetchRSSNews('economy'),
             () => fetchMockEconomyNews()
         ]);
-        
+
+        container.classList.remove('loading');
         container.innerHTML = data.slice(0, 5).map(news => `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
@@ -473,7 +475,13 @@ async function loadEconomyNews() {
         `).join('');
     } catch (error) {
         console.error('Erreur news économie:', error);
-        container.innerHTML = getEmptyState('📰', 'Impossible de charger les actualités');
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '📰',
+            'Erreur de chargement',
+            'Impossible de charger les actualités économiques',
+            loadEconomyNews
+        );
     }
 }
 
@@ -481,13 +489,15 @@ async function loadEconomyNews() {
 
 async function loadAINews() {
     const container = document.getElementById('aiNewsContainer');
-    
+    container.classList.add('loading');
+
     try {
         const data = await fetchWithFallback([
-            () => fetchNewsAPI('artificial intelligence OR AI OR machine learning', 'technology'),
+            () => fetchRSSNews('ai'),
             () => fetchMockAINews()
         ]);
-        
+
+        container.classList.remove('loading');
         container.innerHTML = data.slice(0, 5).map(news => `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
@@ -500,7 +510,13 @@ async function loadAINews() {
         `).join('');
     } catch (error) {
         console.error('Erreur news IA:', error);
-        container.innerHTML = getEmptyState('🤖', 'Impossible de charger les actualités IA');
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '🤖',
+            'Erreur de chargement',
+            'Impossible de charger les actualités IA',
+            loadAINews
+        );
     }
 }
 
@@ -508,19 +524,22 @@ async function loadAINews() {
 
 async function loadWeather() {
     const container = document.getElementById('weatherContainer');
-    
+    container.classList.add('loading');
+
     try {
-        // OpenWeatherMap API
-        const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?q=Dubai&units=metric&lang=fr&appid=${API_KEYS.openWeather}`
-        );
-        
-        if (!response.ok) {
+        // Récupérer météo actuelle et prévisions en parallèle
+        const [currentWeather, forecast] = await Promise.all([
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=Dubai&units=metric&lang=fr&appid=${API_KEYS.openWeather}`),
+            fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Dubai&units=metric&lang=fr&cnt=40&appid=${API_KEYS.openWeather}`)
+        ]);
+
+        if (!currentWeather.ok || !forecast.ok) {
             throw new Error('API météo non disponible');
         }
-        
-        const data = await response.json();
-        
+
+        const currentData = await currentWeather.json();
+        const forecastData = await forecast.json();
+
         const weatherIcons = {
             'Clear': '☀️',
             'Clouds': '☁️',
@@ -531,36 +550,74 @@ async function loadWeather() {
             'Mist': '🌫️',
             'Fog': '🌫️'
         };
-        
+
+        // Extraire prévisions pour les 5 prochains jours (midi)
+        const dailyForecasts = [];
+        const seenDays = new Set();
+
+        for (const item of forecastData.list) {
+            const date = new Date(item.dt * 1000);
+            const dayKey = date.toDateString();
+
+            // Prendre la prévision de midi (12h) pour chaque jour
+            if (!seenDays.has(dayKey) && date.getHours() === 12) {
+                seenDays.add(dayKey);
+                dailyForecasts.push({
+                    date: date,
+                    temp: Math.round(item.main.temp),
+                    icon: weatherIcons[item.weather[0].main] || '🌤️',
+                    description: item.weather[0].description
+                });
+
+                if (dailyForecasts.length === 5) break;
+            }
+        }
+
+        container.classList.remove('loading');
         container.innerHTML = `
             <div class="weather-main">
-                <div class="weather-icon">${weatherIcons[data.weather[0].main] || '🌤️'}</div>
+                <div class="weather-icon">${weatherIcons[currentData.weather[0].main] || '🌤️'}</div>
                 <div>
-                    <div class="weather-temp">${Math.round(data.main.temp)}°C</div>
-                    <div class="weather-description">${data.weather[0].description}</div>
+                    <div class="weather-temp">${Math.round(currentData.main.temp)}°C</div>
+                    <div class="weather-description">${currentData.weather[0].description}</div>
                 </div>
             </div>
             <div class="weather-details">
                 <div class="weather-detail">
                     <div class="weather-detail-label">Ressenti</div>
-                    <div class="weather-detail-value">${Math.round(data.main.feels_like)}°C</div>
+                    <div class="weather-detail-value">${Math.round(currentData.main.feels_like)}°C</div>
                 </div>
                 <div class="weather-detail">
                     <div class="weather-detail-label">Humidité</div>
-                    <div class="weather-detail-value">${data.main.humidity}%</div>
+                    <div class="weather-detail-value">${currentData.main.humidity}%</div>
                 </div>
                 <div class="weather-detail">
                     <div class="weather-detail-label">Vent</div>
-                    <div class="weather-detail-value">${Math.round(data.wind.speed)} km/h</div>
+                    <div class="weather-detail-value">${Math.round(currentData.wind.speed * 3.6)} km/h</div>
                 </div>
                 <div class="weather-detail">
                     <div class="weather-detail-label">Pression</div>
-                    <div class="weather-detail-value">${data.main.pressure} hPa</div>
+                    <div class="weather-detail-value">${currentData.main.pressure} hPa</div>
                 </div>
             </div>
+            ${dailyForecasts.length > 0 ? `
+            <div class="weather-forecast">
+                <h4 style="margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Prévisions 5 jours</h4>
+                <div class="forecast-grid">
+                    ${dailyForecasts.map(day => `
+                        <div class="forecast-day">
+                            <div class="forecast-date">${day.date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}</div>
+                            <div class="forecast-icon">${day.icon}</div>
+                            <div class="forecast-temp">${day.temp}°C</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
         `;
     } catch (error) {
         console.error('Erreur météo:', error);
+        container.classList.remove('loading');
         container.innerHTML = getMockWeather();
     }
 }
@@ -569,41 +626,140 @@ async function loadWeather() {
 
 async function loadRealEstate() {
     const container = document.getElementById('realestateContainer');
-    
-    // Note: Le scraping de Leboncoin nécessite un backend
-    // Pour l'instant, affichage d'un message avec lien direct
-    container.innerHTML = `
-        <div class="news-item">
-            <div class="news-title">🔍 Recherche active sur Leboncoin</div>
-            <div class="news-description">
-                Critères: Maison à Seignosse, 25-50m², max 350 000€
-            </div>
-            <div class="news-meta">
-                <span class="news-source">Leboncoin.fr</span>
-                <a href="https://www.leboncoin.fr/recherche?category=9&locations=Seignosse_40510&real_estate_type=2&price=min-350000&square=25-50" 
-                   target="_blank" class="news-link">
-                   Voir les annonces →
+    container.classList.add('loading');
+
+    try {
+        // Générer des annonces simulées réalistes
+        const mockListings = generateMockRealEstateListings();
+
+        container.classList.remove('loading');
+        container.innerHTML = `
+            <div class="realestate-search-info">
+                <div class="search-criteria">
+                    <strong>🔍 Critères de recherche:</strong> Maison à Seignosse • 25-50m² • Max 350 000€
+                </div>
+                <a href="https://www.leboncoin.fr/recherche?category=9&locations=Seignosse_40510&real_estate_type=2&price=min-350000&square=25-50"
+                   target="_blank"
+                   class="search-link-btn"
+                   style="display: inline-block; margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--accent-primary); color: white; border-radius: 6px; text-decoration: none; font-size: 0.9rem;">
+                    Voir toutes les annonces sur Leboncoin →
                 </a>
             </div>
-        </div>
-        <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 212, 255, 0.1); border-radius: 8px; font-size: 0.9rem; color: var(--text-secondary);">
-            <strong>💡 Note:</strong> Le scraping automatique de Leboncoin nécessite un backend Node.js. 
-            En attendant, cliquez sur le lien pour voir les annonces en direct.
-        </div>
-    `;
+
+            <div class="realestate-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+                <div class="stat-card" style="background: rgba(0, 212, 255, 0.1); padding: 1rem; border-radius: 8px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-primary);">~15</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">Annonces actives</div>
+                </div>
+                <div class="stat-card" style="background: rgba(0, 212, 255, 0.1); padding: 1rem; border-radius: 8px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-primary);">280K€</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">Prix moyen</div>
+                </div>
+                <div class="stat-card" style="background: rgba(0, 212, 255, 0.1); padding: 1rem; border-radius: 8px;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-primary);">38m²</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">Surface moyenne</div>
+                </div>
+            </div>
+
+            <div class="realestate-listings">
+                ${mockListings.map(listing => `
+                    <div class="news-item" style="border-left: 3px solid var(--accent-primary);">
+                        <div class="news-title" style="display: flex; justify-content: space-between; align-items: start;">
+                            <span>${listing.title}</span>
+                            <span style="color: var(--accent-primary); font-weight: bold; white-space: nowrap; margin-left: 1rem;">${listing.price}</span>
+                        </div>
+                        <div class="news-description">${listing.description}</div>
+                        <div class="news-meta" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <span class="news-source" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <span>📐 ${listing.surface}</span>
+                                <span>🛏️ ${listing.rooms}</span>
+                                ${listing.distance ? `<span>📍 ${listing.distance}</span>` : ''}
+                            </span>
+                            <span style="color: var(--text-secondary); font-size: 0.85rem;">${listing.posted}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(255, 170, 0, 0.1); border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+                <strong>💡 Note:</strong> Les annonces ci-dessus sont des exemples simulés. Pour voir les annonces réelles et à jour,
+                cliquez sur le bouton "Voir toutes les annonces" ci-dessus. Le scraping automatique de Leboncoin nécessiterait un backend Node.js.
+            </div>
+        `;
+    } catch (error) {
+        console.error('Erreur immobilier:', error);
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '🏠',
+            'Erreur de chargement',
+            'Impossible de charger les annonces immobilières',
+            loadRealEstate
+        );
+    }
+}
+
+function generateMockRealEstateListings() {
+    const types = ['Maison de ville', 'Studio', 'Appartement', 'Petite maison'];
+    const features = [
+        'proche plage', 'rénové', 'jardin', 'terrasse', 'parking',
+        'lumineux', 'calme', 'centre-ville', 'proche commerces'
+    ];
+
+    const listings = [
+        {
+            title: 'Charmante maison de ville',
+            price: '295 000€',
+            surface: '42m²',
+            rooms: '2 pièces',
+            distance: '800m plage',
+            description: 'Belle maison rénovée avec terrasse, proche de toutes commodités',
+            posted: 'Il y a 2 jours'
+        },
+        {
+            title: 'Studio cosy',
+            price: '185 000€',
+            surface: '28m²',
+            rooms: '1 pièce',
+            distance: '1.2km plage',
+            description: 'Studio lumineux avec coin kitchenette, idéal investissement locatif',
+            posted: 'Il y a 5 jours'
+        },
+        {
+            title: 'Appartement avec jardin',
+            price: '340 000€',
+            surface: '48m²',
+            rooms: '2 pièces',
+            distance: '600m plage',
+            description: 'Rare ! Appartement avec jardin privatif de 50m², parking inclus',
+            posted: 'Il y a 1 semaine'
+        },
+        {
+            title: 'Maison de plain-pied',
+            price: '275 000€',
+            surface: '35m²',
+            rooms: '2 pièces',
+            distance: '1km plage',
+            description: 'Petite maison de plain-pied, calme, proche forêt et commerces',
+            posted: 'Il y a 3 jours'
+        }
+    ];
+
+    return listings;
 }
 
 // ========== GÉOPOLITIQUE ==========
 
 async function loadGeopoliticsNews() {
     const container = document.getElementById('geopoliticsContainer');
-    
+    container.classList.add('loading');
+
     try {
         const data = await fetchWithFallback([
-            () => fetchNewsAPI('geopolitics OR international OR world news', 'general'),
+            () => fetchRSSNews('geopolitics'),
             () => fetchMockGeopoliticsNews()
         ]);
-        
+
+        container.classList.remove('loading');
         container.innerHTML = data.slice(0, 5).map(news => `
             <div class="news-item">
                 <div class="news-title">${news.title}</div>
@@ -616,23 +772,59 @@ async function loadGeopoliticsNews() {
         `).join('');
     } catch (error) {
         console.error('Erreur news géopolitique:', error);
-        container.innerHTML = getEmptyState('🌍', 'Impossible de charger les actualités');
+        container.classList.remove('loading');
+        container.innerHTML = getErrorState(
+            '🌍',
+            'Erreur de chargement',
+            'Impossible de charger les actualités géopolitiques',
+            loadGeopoliticsNews
+        );
     }
 }
 
 // ========== API HELPERS ==========
 
+async function fetchRSSNews(topic) {
+    // RSS feeds gratuits pour différents sujets
+    const rssFeeds = {
+        economy: 'https://www.lesechos.fr/rss/finance-marches.xml',
+        ai: 'https://www.artificialintelligence-news.com/feed/',
+        geopolitics: 'https://www.lemonde.fr/international/rss_full.xml'
+    };
+
+    const feedUrl = rssFeeds[topic];
+    if (!feedUrl) throw new Error('Topic not found');
+
+    // Utilisation de rss2json.com (gratuit, pas de clé requise)
+    const response = await fetch(
+        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=10`
+    );
+
+    if (!response.ok) throw new Error('RSS Feed error');
+
+    const data = await response.json();
+
+    if (data.status !== 'ok') throw new Error('RSS parsing error');
+
+    return data.items.map(item => ({
+        title: item.title,
+        description: item.description ? item.description.replace(/<[^>]*>/g, '').substring(0, 150) + '...' : '',
+        source: data.feed.title,
+        url: item.link
+    }));
+}
+
 async function fetchNewsAPI(query, category) {
     if (API_KEYS.newsApi === 'demo') {
         throw new Error('Clé API requise');
     }
-    
+
     const response = await fetch(
         `https://newsapi.org/v2/top-headlines?q=${encodeURIComponent(query)}&category=${category}&language=fr&apiKey=${API_KEYS.newsApi}`
     );
-    
+
     if (!response.ok) throw new Error('API News error');
-    
+
     const data = await response.json();
     return data.articles.map(article => ({
         title: article.title,

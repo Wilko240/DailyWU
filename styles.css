@@ -484,6 +484,50 @@ body::before {
     color: var(--text-primary);
 }
 
+/* Weather Forecast */
+.weather-forecast {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.forecast-day {
+    text-align: center;
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+}
+
+.forecast-day:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+}
+
+.forecast-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.forecast-icon {
+    font-size: 2rem;
+    margin: 0.5rem 0;
+}
+
+.forecast-temp {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
 /* Real Estate */
 .property-item {
     padding: var(--spacing-md);
