@@ -426,10 +426,15 @@ body::before {
     color: var(--accent-primary);
     text-decoration: none;
     transition: color 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 10;
 }
 
 .news-link:hover {
     color: var(--text-primary);
+    text-decoration: underline;
 }
 
 /* Weather */
