@@ -446,6 +446,19 @@ body::before {
     text-decoration: underline;
 }
 
+/* Search link button (for real estate section) */
+.search-link-btn {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+}
+
+.search-link-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
 /* Weather */
 .weather-main {
     display: flex;
