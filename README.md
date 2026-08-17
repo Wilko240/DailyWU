@@ -52,6 +52,24 @@ npm start
 4. **Accéder au dashboard**
 Ouvrez http://localhost:3000/index.html
 
+## 📱 Tester sur votre téléphone
+
+Le dashboard est maintenant une **Progressive Web App (PWA)** : vous pouvez l'ouvrir dans le navigateur de votre téléphone et l'installer comme une vraie app (icône sur l'écran d'accueil, plein écran, fonctionne même avec une connexion instable).
+
+### Option A — Via GitHub Pages (le plus simple, aucune installation)
+1. Une fois cette branche fusionnée sur `main`, GitHub Pages se déploie automatiquement (workflow `.github/workflows/deploy-pages.yml`).
+2. Si Pages n'est pas encore activé : allez dans **Settings → Pages** du repo GitHub, et choisissez **Source: GitHub Actions**.
+3. Ouvrez l'URL fournie (`https://<votre-user>.github.io/<repo>/`) sur votre téléphone.
+4. **iPhone (Safari)** : bouton Partager → *Sur l'écran d'accueil*.
+   **Android (Chrome)** : menu ⋮ → *Installer l'application* (ou *Ajouter à l'écran d'accueil*).
+
+### Option B — En local, sur le même Wi-Fi
+1. Sur votre ordinateur : `npx serve .` (ou `python3 -m http.server 8080`) depuis le dossier du projet.
+2. Trouvez l'IP locale de votre ordinateur (ex: `192.168.1.23`).
+3. Sur votre téléphone (connecté au **même Wi-Fi**), ouvrez `http://192.168.1.23:8080` puis ajoutez à l'écran d'accueil comme ci-dessus.
+
+Le mode "Frontend seulement" fonctionne directement (données de démo si les clés API ne sont pas configurées), donc aucun backend n'est requis pour tester sur mobile.
+
 ## 🔑 Obtenir les Clés API
 
 ### OpenWeatherMap (Gratuit - 1000 calls/jour)
@@ -164,7 +182,7 @@ npm install
 - [ ] Alertes configurables (email/push)
 - [ ] Export de données (CSV/PDF)
 - [ ] Multi-devises (EUR/USD/GBP)
-- [ ] PWA avec mode offline
+- [x] PWA avec mode offline
 - [ ] Tests unitaires
 - [ ] CI/CD pipeline
 
